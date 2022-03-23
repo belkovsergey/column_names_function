@@ -4,44 +4,44 @@ CREATE OR REPLACE FUNCTION COLUMN_NAMES
     p_separator IN VARCHAR2 DEFAULT CHR(13)||CHR(10) 
   ) RETURN CLOB
 IS
-  p_query_out         CLOB;              -- переменная для модифицирования p_query  (т.к. она должна быть в режиме IN)
-  p_format_out        CLOB;              -- переменная для модифицирования p_format (т.к. она должна быть в режиме IN)
-  tag_2_qty           NUMBER;            -- кол-во тегов во втором параметре p_format 
-  cur_fh              PLS_INTEGER;       -- идентификатор курсора
-  col_qty_fh          PLS_INTEGER;       -- сюда запишется кол-во столбцов запроса
-  col_names_coll_fh   DBMS_SQL.DESC_TAB; -- коллекция с именами столбцов
-  p_query_answer      CLOB;              -- ответ, который возвращает функция  
+  p_query_out         CLOB;              -- ГЇГҐГ°ГҐГ¬ГҐГ­Г­Г Гї Г¤Г«Гї Г¬Г®Г¤ГЁГґГЁГ¶ГЁГ°Г®ГўГ Г­ГЁГї p_query  (ГІ.ГЄ. Г®Г­Г  Г¤Г®Г«Г¦Г­Г  ГЎГ»ГІГј Гў Г°ГҐГ¦ГЁГ¬ГҐ IN)
+  p_format_out        CLOB;              -- ГЇГҐГ°ГҐГ¬ГҐГ­Г­Г Гї Г¤Г«Гї Г¬Г®Г¤ГЁГґГЁГ¶ГЁГ°Г®ГўГ Г­ГЁГї p_format (ГІ.ГЄ. Г®Г­Г  Г¤Г®Г«Г¦Г­Г  ГЎГ»ГІГј Гў Г°ГҐГ¦ГЁГ¬ГҐ IN)
+  tag_2_qty           NUMBER;            -- ГЄГ®Г«-ГўГ® ГІГҐГЈГ®Гў ГўГ® ГўГІГ®Г°Г®Г¬ ГЇГ Г°Г Г¬ГҐГІГ°ГҐ p_format 
+  cur_fh              PLS_INTEGER;       -- ГЁГ¤ГҐГ­ГІГЁГґГЁГЄГ ГІГ®Г° ГЄГіГ°Г±Г®Г°Г 
+  col_qty_fh          PLS_INTEGER;       -- Г±ГѕГ¤Г  Г§Г ГЇГЁГёГҐГІГ±Гї ГЄГ®Г«-ГўГ® Г±ГІГ®Г«ГЎГ¶Г®Гў Г§Г ГЇГ°Г®Г±Г 
+  col_names_coll_fh   DBMS_SQL.DESC_TAB; -- ГЄГ®Г«Г«ГҐГЄГ¶ГЁГї Г± ГЁГ¬ГҐГ­Г Г¬ГЁ Г±ГІГ®Г«ГЎГ¶Г®Гў
+  p_query_answer      CLOB;              -- Г®ГІГўГҐГІ, ГЄГ®ГІГ®Г°Г»Г© ГўГ®Г§ГўГ°Г Г№Г ГҐГІ ГґГіГ­ГЄГ¶ГЁГї  
 BEGIN
-  -- очистка от возможных двойных кавычек
+  -- Г®Г·ГЁГ±ГІГЄГ  Г®ГІ ГўГ®Г§Г¬Г®Г¦Г­Г»Гµ Г¤ГўГ®Г©Г­Г»Гµ ГЄГ ГўГ»Г·ГҐГЄ
   p_query_out  := REPLACE(p_query, q'['']', q'[']');
   p_format_out := REPLACE(p_format, q'['']', q'[']');
-    DBMS_OUTPUT.PUT_LINE(N'После очистки от двойных кавычек (даже если их не было) p_query_out = ' || p_query_out);
-    DBMS_OUTPUT.PUT_LINE(N'После очистки от двойных кавычек (даже если их не было) p_format_out = ' || p_format_out);
+    DBMS_OUTPUT.PUT_LINE(N'ГЏГ®Г±Г«ГҐ Г®Г·ГЁГ±ГІГЄГЁ Г®ГІ Г¤ГўГ®Г©Г­Г»Гµ ГЄГ ГўГ»Г·ГҐГЄ (Г¤Г Г¦ГҐ ГҐГ±Г«ГЁ ГЁГµ Г­ГҐ ГЎГ»Г«Г®) p_query_out = ' || p_query_out);
+    DBMS_OUTPUT.PUT_LINE(N'ГЏГ®Г±Г«ГҐ Г®Г·ГЁГ±ГІГЄГЁ Г®ГІ Г¤ГўГ®Г©Г­Г»Гµ ГЄГ ГўГ»Г·ГҐГЄ (Г¤Г Г¦ГҐ ГҐГ±Г«ГЁ ГЁГµ Г­ГҐ ГЎГ»Г«Г®) p_format_out = ' || p_format_out);
     DBMS_OUTPUT.PUT_LINE('= = = = = = = = = ='); 
-  -- извлечение имён столбцов
+  -- ГЁГ§ГўГ«ГҐГ·ГҐГ­ГЁГҐ ГЁГ¬ВёГ­ Г±ГІГ®Г«ГЎГ¶Г®Гў
   cur_fh := DBMS_SQL.OPEN_CURSOR;
   DBMS_SQL.PARSE(cur_fh, p_query_out, DBMS_SQL.NATIVE);
   DBMS_SQL.DESCRIBE_COLUMNS (cur_fh, col_qty_fh, col_names_coll_fh);
-  -- обработка второго параметра p_format
+  -- Г®ГЎГ°Г ГЎГ®ГІГЄГ  ГўГІГ®Г°Г®ГЈГ® ГЇГ Г°Г Г¬ГҐГІГ°Г  p_format
   tag_2_qty := REGEXP_COUNT(p_format_out, '<#[^#]*#>');
-  -- получение итоговой строки-ответа
+  -- ГЇГ®Г«ГіГ·ГҐГ­ГЁГҐ ГЁГІГ®ГЈГ®ГўГ®Г© Г±ГІГ°Г®ГЄГЁ-Г®ГІГўГҐГІГ 
   FOR i IN 1..col_names_coll_fh.LAST 
   LOOP
     IF tag_2_qty > 0
       THEN
         FOR x IN 1..tag_2_qty LOOP
-          IF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column'				-- fh_column это имя столбца
+          IF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column'				-- fh_column ГЅГІГ® ГЁГ¬Гї Г±ГІГ®Г«ГЎГ¶Г 
             THEN p_format_out := REGEXP_REPLACE(p_format_out, '([^<]*)<#' || 'fh_column' || '#>(.*)', 
                                                 '\1' || col_names_coll_fh(i).col_name || '\2', 1, 1, 'i');
-              DBMS_OUTPUT.PUT_LINE(N'На ' || i || N'-м проходе (i) шага № ' || x || N' (x) была замена fh_column и p_format_out = ' || p_format_out);
-          ELSIF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column_number'	-- fh_column_number это порядковый номер столбца в запросе
+              DBMS_OUTPUT.PUT_LINE(N'ГЌГ  ' || i || N'-Г¬ ГЇГ°Г®ГµГ®Г¤ГҐ (i) ГёГ ГЈГ  В№ ' || x || N' (x) ГЎГ»Г«Г  Г§Г Г¬ГҐГ­Г  fh_column ГЁ p_format_out = ' || p_format_out);
+          ELSIF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column_number'	-- fh_column_number ГЅГІГ® ГЇГ®Г°ГїГ¤ГЄГ®ГўГ»Г© Г­Г®Г¬ГҐГ° Г±ГІГ®Г«ГЎГ¶Г  Гў Г§Г ГЇГ°Г®Г±ГҐ
             THEN p_format_out := REGEXP_REPLACE(p_format_out, '([^<]*)<#' || 'fh_column_number' || '#>(.*)', 
                                                 '\1' || i || '\2', 1, 1, 'i');
-              DBMS_OUTPUT.PUT_LINE(N'На ' || i || N'-м проходе (i) шага № ' || x || N' (x) была замена fh_column_number и p_format_out = ' || p_format_out);
-          ELSIF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column_count'		-- fh_column_count это общее кол-во столбцов в запросе
+              DBMS_OUTPUT.PUT_LINE(N'ГЌГ  ' || i || N'-Г¬ ГЇГ°Г®ГµГ®Г¤ГҐ (i) ГёГ ГЈГ  В№ ' || x || N' (x) ГЎГ»Г«Г  Г§Г Г¬ГҐГ­Г  fh_column_number ГЁ p_format_out = ' || p_format_out);
+          ELSIF LOWER(REGEXP_REPLACE(REGEXP_SUBSTR(p_format, '<#[^#]+#>', 1, x), '<#([^#]+)#>', '\1') ) = 'fh_column_count'		-- fh_column_count ГЅГІГ® Г®ГЎГ№ГҐГҐ ГЄГ®Г«-ГўГ® Г±ГІГ®Г«ГЎГ¶Г®Гў Гў Г§Г ГЇГ°Г®Г±ГҐ
             THEN p_format_out := REGEXP_REPLACE(p_format_out, '([^<]*)<#' || 'fh_column_count' || '#>(.*)', 
                                                 '\1' || col_names_coll_fh.LAST || '\2', 1, 1, 'i');
-              DBMS_OUTPUT.PUT_LINE(N'На ' || i || N'-м проходе (i) шага № ' || x || N' (x) была замена fh_column_count и p_format_out = ' || p_format_out);
+              DBMS_OUTPUT.PUT_LINE(N'ГЌГ  ' || i || N'-Г¬ ГЇГ°Г®ГµГ®Г¤ГҐ (i) ГёГ ГЈГ  В№ ' || x || N' (x) ГЎГ»Г«Г  Г§Г Г¬ГҐГ­Г  fh_column_count ГЁ p_format_out = ' || p_format_out);
           ELSE NULL;
           END IF;
         END LOOP;
@@ -51,18 +51,18 @@ BEGIN
     END IF;
   END LOOP;
   p_query_answer := RTRIM(p_query_answer, p_separator);
-    /*DBMS_OUTPUT.PUT_LINE(N'Результат функции COLUMN_NAMES: ' || p_query_answer);*/
+    /*DBMS_OUTPUT.PUT_LINE(N'ГђГҐГ§ГіГ«ГјГІГ ГІ ГґГіГ­ГЄГ¶ГЁГЁ COLUMN_NAMES: ' || p_query_answer);*/
   RETURN p_query_answer;
 EXCEPTION
-  WHEN OTHERS  -- в рамках этой задачи можно игнорить все ошибки
-    THEN DBMS_OUTPUT.PUT_LINE(N'Функция COLUMN_NAMES не вернула значение из-за ошибки во входных параметрах');
+  WHEN OTHERS  -- Гў Г°Г Г¬ГЄГ Гµ ГЅГІГ®Г© Г§Г Г¤Г Г·ГЁ Г¬Г®Г¦Г­Г® ГЁГЈГ­Г®Г°ГЁГІГј ГўГ±ГҐ Г®ГёГЁГЎГЄГЁ
+    THEN DBMS_OUTPUT.PUT_LINE(N'Г”ГіГ­ГЄГ¶ГЁГї COLUMN_NAMES Г­ГҐ ГўГҐГ°Г­ГіГ«Г  Г§Г­Г Г·ГҐГ­ГЁГҐ ГЁГ§-Г§Г  Г®ГёГЁГЎГЄГЁ ГўГ® ГўГµГ®Г¤Г­Г»Гµ ГЇГ Г°Г Г¬ГҐГІГ°Г Гµ');
 END;
 /
 
 
--- примеры использования
+-- ГЇГ°ГЁГ¬ГҐГ°Г» ГЁГ±ГЇГ®Г«ГјГ§Г®ГўГ Г­ГЁГї
 
-SELECT COLUMN_NAMES('select * from nc_sneakers', '<#fh_column#>', ', ') AS func_res FROM dual; -- вернёт названия всех столбцов через запятую из таблицы nc_sneakers
+SELECT COLUMN_NAMES('select * from nc_sneakers', '<#fh_column#>', ', ') AS func_res FROM dual; -- ГўГҐГ°Г­ВёГІ Г­Г Г§ГўГ Г­ГЁГї ГўГ±ГҐГµ Г±ГІГ®Г«ГЎГ¶Г®Гў Г·ГҐГ°ГҐГ§ Г§Г ГЇГїГІГіГѕ ГЁГ§ ГІГ ГЎГ«ГЁГ¶Г» nc_sneakers
 
-SELECT COLUMN_NAMES('select * from nc_sneakers', '<#fh_column#> это <#fh_column_number#>-й столбец из <#fh_column_count#>') 
-AS func_res FROM dual;			-- вернёт названия всех столбцов из таблицы nc_sneakers в виде: "SN_ID это 1-й столбец из 8" и т.д. 
+SELECT COLUMN_NAMES('select * from nc_sneakers', '<#fh_column#> ГЅГІГ® <#fh_column_number#>-Г© Г±ГІГ®Г«ГЎГҐГ¶ ГЁГ§ <#fh_column_count#>') 
+AS func_res FROM dual;			-- ГўГҐГ°Г­ВёГІ Г­Г Г§ГўГ Г­ГЁГї ГўГ±ГҐГµ Г±ГІГ®Г«ГЎГ¶Г®Гў ГЁГ§ ГІГ ГЎГ«ГЁГ¶Г» nc_sneakers Гў ГўГЁГ¤ГҐ: "SN_ID ГЅГІГ® 1-Г© Г±ГІГ®Г«ГЎГҐГ¶ ГЁГ§ 8" ГЁ ГІ.Г¤.
